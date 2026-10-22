@@ -1,0 +1,172 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://steps/step_00_start/level.gd" id="1_level"]
+
+[ext_resource type="Script" path="res://steps/step_00_start/debug_map.gd" id="2_map"]
+
+[ext_resource type="Script" path="res://steps/step_00_start/hud.gd" id="3_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.05, 0.05, 0.06, 0.82)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 48.0
+content_margin_top = 28.0
+content_margin_right = 48.0
+content_margin_bottom = 28.0
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+ground_bottom_color = Color(0.38, 0.42, 0.47, 1)
+ground_horizon_color = Color(0.62, 0.66, 0.7, 1)
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+ambient_light_source = 2
+ambient_light_color = Color(0.75, 0.76, 0.78, 1)
+ambient_light_energy = 1.0
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81915206, 0.57357645, -0.6710101, 0.46984634, 0, 0, 0)
+shadow_enabled = true
+directional_shadow_max_distance = 300.0
+
+[node name="Level" type="Node3D" parent="."]
+script = ExtResource("1_level")
+
+[node name="HUD" type="CanvasLayer" parent="." node_paths=PackedStringArray("level")]
+script = ExtResource("3_hud")
+level = NodePath("../Level")
+
+[node name="DebugMap" type="Control" parent="HUD" node_paths=PackedStringArray("level")]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 316.0
+offset_bottom = 316.0
+clip_contents = true
+mouse_filter = 2
+script = ExtResource("2_map")
+level = NodePath("../../Level")
+
+[node name="Stats" type="VBoxContainer" parent="HUD"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -376.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 245.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="RoomLabel" type="Label" parent="HUD/Stats"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 40
+text = "Room 0 / 20"
+horizontal_alignment = 2
+
+[node name="KeysLabel" type="Label" parent="HUD/Stats"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 40
+text = "Keys 0"
+horizontal_alignment = 2
+
+[node name="TimeLabel" type="Label" parent="HUD/Stats"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 40
+text = "0:00.0"
+horizontal_alignment = 2
+
+[node name="BestLabel" type="Label" parent="HUD/Stats"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 40
+text = "Best -:--.-"
+horizontal_alignment = 2
+
+[node name="MessageLabel" type="Label" parent="HUD"]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 0.72
+anchor_right = 0.5
+anchor_bottom = 0.72
+offset_left = -420.0
+offset_top = -34.0
+offset_right = 420.0
+offset_bottom = 34.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.25, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 56
+text = "Locked: find the key"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MessageTimer" type="Timer" parent="HUD"]
+wait_time = 1.5
+one_shot = true
+
+[node name="FinishPanel" type="PanelContainer" parent="HUD"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Rows" type="VBoxContainer" parent="HUD/FinishPanel"]
+layout_mode = 2
+
+[node name="FinishTitle" type="Label" parent="HUD/FinishPanel/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 72
+text = "Finished!"
+horizontal_alignment = 1
+
+[node name="FinishTime" type="Label" parent="HUD/FinishPanel/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 56
+text = "0:00.0"
+horizontal_alignment = 1
+
+[node name="NewBest" type="Label" parent="HUD/FinishPanel/Rows"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.18, 1)
+theme_override_font_sizes/font_size = 48
+text = "New best!"
+horizontal_alignment = 1
+
+[node name="FinishHint" type="Label" parent="HUD/FinishPanel/Rows"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.7)
+theme_override_font_sizes/font_size = 28
+text = "R  run again      N  next seed"
+horizontal_alignment = 1

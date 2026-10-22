@@ -1,0 +1,13 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://steps/step_05_clear_paths/room_weights.gd" id="1_weights"]
+
+[resource]
+script = ExtResource("1_weights")
+straight = 2.0
+long = 2.0
+turn_left = 3.0
+turn_right = 3.0
+wide = 1.0
+vault = 1.0
+min_gap = 8

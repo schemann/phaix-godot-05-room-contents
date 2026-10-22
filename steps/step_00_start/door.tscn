@@ -1,0 +1,71 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://steps/step_00_start/door.gd" id="1_door"]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/door.tres" id="2_door"]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/lock.tres" id="3_lock"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_slab"]
+size = Vector3(1.6, 2.4, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_slab"]
+material = ExtResource("2_door")
+size = Vector3(1.6, 2.4, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_plate"]
+material = ExtResource("3_lock")
+size = Vector3(0.44, 0.56, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bar"]
+material = ExtResource("3_lock")
+size = Vector3(1.44, 0.14, 0.14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_trigger"]
+size = Vector3(3, 2.4, 3.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_swing"]
+size = Vector3(1.7, 2.4, 2.3)
+
+[node name="Door" type="Node3D"]
+script = ExtResource("1_door")
+
+[node name="Hinge" type="AnimatableBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0, 0)
+sync_to_physics = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hinge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 1.2, 0)
+shape = SubResource("BoxShape3D_slab")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Hinge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 1.2, 0)
+mesh = SubResource("BoxMesh_slab")
+
+[node name="Lock" type="Node3D" parent="Hinge"]
+visible = false
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 1.15, 0)
+
+[node name="Bar" type="MeshInstance3D" parent="Hinge/Lock"]
+mesh = SubResource("BoxMesh_bar")
+
+[node name="Plate" type="MeshInstance3D" parent="Hinge/Lock"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0, 0)
+mesh = SubResource("BoxMesh_plate")
+
+[node name="Trigger" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitoring = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Trigger"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 1.9)
+shape = SubResource("BoxShape3D_trigger")
+
+[node name="Swing" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Swing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -0.65)
+shape = SubResource("BoxShape3D_swing")

@@ -1,0 +1,5 @@
+.godot/
+*.import.cache
+export/
+.DS_Store
+override.cfg

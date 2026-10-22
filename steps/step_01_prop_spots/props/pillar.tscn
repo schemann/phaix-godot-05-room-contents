@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/prop.tres" id="1_prop"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pillar"]
+material = ExtResource("1_prop")
+top_radius = 0.35
+bottom_radius = 0.35
+height = 3.0
+radial_segments = 16
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_pillar"]
+height = 3.0
+radius = 0.35
+
+[node name="Pillar" type="StaticBody3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -0.35)
+mesh = SubResource("CylinderMesh_pillar")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -0.35)
+shape = SubResource("CylinderShape3D_pillar")

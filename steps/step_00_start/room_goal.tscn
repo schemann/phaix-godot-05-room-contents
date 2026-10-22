@@ -1,0 +1,120 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://steps/step_00_start/room.gd" id="1_room"]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/floor.tres" id="2_floor"]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/wall.tres" id="3_wall"]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/ceiling.tres" id="4_ceiling"]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/fixture.tres" id="5_fixture"]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/goal.tres" id="6_goal"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_fixture"]
+material = ExtResource("5_fixture")
+size = Vector3(0.6, 0.08, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pad_fixture"]
+material = ExtResource("5_fixture")
+size = Vector3(0.4, 0.08, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_inside"]
+size = Vector3(10, 3, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_goal_pad"]
+size = Vector3(1.4, 1.5, 1.4)
+
+[node name="Room" type="Node3D"]
+script = ExtResource("1_room")
+
+[node name="Shell" type="CSGCombiner3D" parent="."]
+use_collision = true
+
+[node name="Floor" type="CSGBox3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+size = Vector3(10, 0.2, 14)
+material = ExtResource("2_floor")
+
+[node name="WallEntrance" type="CSGBox3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 6.9)
+size = Vector3(10, 3, 0.2)
+material = ExtResource("3_wall")
+
+[node name="Opening" type="CSGBox3D" parent="Shell/WallEntrance"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+operation = 2
+size = Vector3(1.6, 2.4, 0.5)
+material = ExtResource("3_wall")
+
+[node name="WallFar" type="CSGBox3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -6.9)
+size = Vector3(10, 3, 0.2)
+material = ExtResource("3_wall")
+
+[node name="WallLeft" type="CSGBox3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.9, 1.5, 0)
+size = Vector3(0.2, 3, 14)
+material = ExtResource("3_wall")
+
+[node name="WallRight" type="CSGBox3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.9, 1.5, 0)
+size = Vector3(0.2, 3, 14)
+material = ExtResource("3_wall")
+
+[node name="Pad" type="CSGBox3D" parent="Shell"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, -3)
+size = Vector3(3, 0.12, 3)
+material = ExtResource("6_goal")
+
+[node name="Ceiling" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+layers = 2
+use_collision = true
+size = Vector3(10, 0.2, 14)
+material = ExtResource("4_ceiling")
+
+[node name="RoomLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
+light_color = Color(1, 0.94, 0.82, 1)
+light_energy = 1.3
+omni_range = 10
+omni_attenuation = 0.5
+
+[node name="Fixture" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.96, 0)
+layers = 2
+mesh = SubResource("BoxMesh_fixture")
+
+[node name="Entrance" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7)
+
+[node name="Inside" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Inside"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_inside")
+
+[node name="GoalPad" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GoalPad"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("BoxShape3D_goal_pad")
+
+[node name="PadLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -3)
+light_color = Color(1, 0.84, 0.5, 1)
+light_energy = 1.2
+omni_range = 4.5
+omni_attenuation = 0.5
+
+[node name="PadFixture" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.96, -3)
+layers = 2
+mesh = SubResource("BoxMesh_pad_fixture")

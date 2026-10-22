@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/prop.tres" id="1_prop"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_top"]
+material = ExtResource("1_prop")
+size = Vector3(1.6, 0.08, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_leg"]
+material = ExtResource("1_prop")
+size = Vector3(0.1, 0.8, 0.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_table"]
+size = Vector3(1.6, 0.88, 0.9)
+
+[node name="Table" type="StaticBody3D"]
+
+[node name="Top" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, -0.45)
+mesh = SubResource("BoxMesh_top")
+
+[node name="LegBackLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0.4, -0.1)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="LegBackRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.4, -0.1)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="LegFrontLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0.4, -0.8)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="LegFrontRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.4, -0.8)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, -0.45)
+shape = SubResource("BoxShape3D_table")

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://steps/step_04_rare_rooms/prop_set.gd" id="1_set"]
+
+[ext_resource type="PackedScene" path="res://steps/step_04_rare_rooms/props/crate.tscn" id="2_crate"]
+
+[ext_resource type="PackedScene" path="res://steps/step_04_rare_rooms/props/stack.tscn" id="3_stack"]
+
+[ext_resource type="PackedScene" path="res://steps/step_04_rare_rooms/props/table.tscn" id="4_table"]
+
+[ext_resource type="PackedScene" path="res://steps/step_04_rare_rooms/props/shelf.tscn" id="5_shelf"]
+
+[ext_resource type="PackedScene" path="res://steps/step_04_rare_rooms/props/pillar.tscn" id="6_pillar"]
+
+[resource]
+script = ExtResource("1_set")
+scenes = Array[PackedScene]([ExtResource("2_crate"), ExtResource("3_stack"), ExtResource("4_table"), ExtResource("5_shelf"), ExtResource("6_pillar")])
+weights = Array[float]([3.0, 2.0, 2.0, 2.0, 1.0])
+empty_weight = 4.0

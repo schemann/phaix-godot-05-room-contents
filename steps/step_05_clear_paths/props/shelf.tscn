@@ -1,0 +1,56 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="StandardMaterial3D" path="res://materials/prop.tres" id="1_prop"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_back"]
+material = ExtResource("1_prop")
+size = Vector3(1.6, 2, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_side"]
+material = ExtResource("1_prop")
+size = Vector3(0.06, 2, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_board"]
+material = ExtResource("1_prop")
+size = Vector3(1.6, 0.05, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_shelf"]
+size = Vector3(1.6, 2, 0.4)
+
+[node name="Shelf" type="StaticBody3D"]
+
+[node name="Back" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -0.015)
+mesh = SubResource("BoxMesh_back")
+
+[node name="SideLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.77, 1, -0.2)
+mesh = SubResource("BoxMesh_side")
+
+[node name="SideRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.77, 1, -0.2)
+mesh = SubResource("BoxMesh_side")
+
+[node name="Board0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -0.2)
+mesh = SubResource("BoxMesh_board")
+
+[node name="Board1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, -0.2)
+mesh = SubResource("BoxMesh_board")
+
+[node name="Board2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -0.2)
+mesh = SubResource("BoxMesh_board")
+
+[node name="Board3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, -0.2)
+mesh = SubResource("BoxMesh_board")
+
+[node name="Board4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.975, -0.2)
+mesh = SubResource("BoxMesh_board")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -0.2)
+shape = SubResource("BoxShape3D_shelf")
