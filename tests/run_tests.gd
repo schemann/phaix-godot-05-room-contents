@@ -72,13 +72,29 @@ const VAULT_PLATFORM_HEIGHT := 0.12 ## The raised middle of the vault: a step th
 const SEED_42_LOCKS: Array[int] = [3, 4, 12] ## Rooms the default settings lock in seed 42 (goal room 20, lock chance 0.4): the same in every step.
 const SEED_42_VAULTS: Array[int] = [2] ## The vaults of seed 42 in steps 4 and 5.
 
+## Counts the script errors the engine logs. A test that hits one stops at that line and the engine hands back an
+## empty array, which reads as a pass: `_report` charges the count to the test that ran.
+class ScriptErrorCounter extends Logger:
+	var count := 0
+	var _lock := Mutex.new() ## The engine calls a logger from any thread.
+
+	func _log_error(_function: String, _file: String, _line: int, _code: String, _rationale: String, _editor_notify: bool, error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		if error_type != ERROR_TYPE_SCRIPT:
+			return
+		_lock.lock()
+		count += 1
+		_lock.unlock()
+
 var _passed := 0
 var _failed := 0
 var _skipped := 0
+var _script_errors := ScriptErrorCounter.new() ## Registered with the engine's logger for the whole run.
+var _script_errors_reported := 0 ## How many script errors the tests reported so far have been charged with.
 var _save_dir := ""
 var _save_counter := 0
 
 func _initialize() -> void:
+	OS.add_logger(_script_errors)
 	await process_frame
 	var started := Time.get_ticks_msec()
 	_save_dir = OS.get_temp_dir().path_join("phaix-godot-05-tests")
@@ -203,6 +219,7 @@ func _initialize() -> void:
 		await _run("%s: main scene runs 30 frames" % step, test_scene_runs.bind(step))
 
 	_wipe_save_dir()
+	OS.remove_logger(_script_errors)
 	print("\n%d passed, %d failed, %d skipped in %.1f s" % [_passed, _failed, _skipped, (Time.get_ticks_msec() - started) / 1000.0])
 	quit(1 if _failed > 0 else 0)
 
@@ -4077,6 +4094,10 @@ func test_contents_command() -> Array[String]:
 #region Helpers
 
 func _report(test_name: String, failures: Array[String]) -> void:
+	var script_errors := _script_errors.count - _script_errors_reported
+	_script_errors_reported = _script_errors.count
+	if script_errors > 0: # the test stopped at the failing line and the engine returned an empty array, which would read as a pass
+		failures.insert(0, "the test stopped with a script error: see the log")
 	if failures.is_empty():
 		_passed += 1
 		print("PASS  ", test_name)
