@@ -41,7 +41,7 @@ func _load() -> void:
 	if readable and json.data is Dictionary and (json.data as Dictionary).get("bestTimes", {}) is Dictionary:
 		_data = json.data
 		return
-	# Never delete what cannot be read: keep it for a human and start with an empty list.
+	# Never delete what cannot be read: keep it to look at later, start with an empty list.
 	push_warning("best times: %s cannot be read, kept as %s.bad" % [_path, _path])
 	DirAccess.rename_absolute(_path, _path + ".bad")
 

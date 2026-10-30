@@ -14,7 +14,7 @@ that step. The project's main scene is the final step.
 
 | Folder | Part of the video |
 |---|---|
-| `steps/step_00_start` | Starting point (the final state of the previous tutorial) |
+| `steps/step_00_start` | Starting point (the final state of tutorial 04) |
 | `steps/step_01_prop_spots` | Step 1 - Props on markers |
 | `steps/step_02_prop_sets` | Step 2 - Prop sets |
 | `steps/step_03_weighted_rooms` | Step 3 - Weighted rooms |
