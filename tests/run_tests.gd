@@ -102,7 +102,7 @@ func _initialize() -> void:
 	await _run("code rules: no class_name, no global random, no wall clock, input only through named actions", test_code_rules)
 	await _run("code rules: the HUD only reads the level", test_hud_reads_only)
 	await _run("code rules: the door never knows what a key is, the key never knows the level, locks, props and rooms have their own generators", test_key_rules)
-	await _run("code rules: props and room weights are data (Resource scripts with exports, .tres files), the code only rolls and walks", test_data_rules)
+	await _run("code rules: props and room weights are data (Resource scripts with exports, .tres files), the code only takes a random number and walks", test_data_rules)
 	await _run("steps: each step changes only what its concept needs, everything else is copied forward", test_copy_forward)
 	await _run("step_00_start: tutorial 04's final state, file for file (only the folder names differ)", test_step_zero_is_tutorial_04)
 	for step in STEPS:
@@ -116,7 +116,7 @@ func _initialize() -> void:
 		await _run("goal (%s): other goal rooms (1, 2, 7, 50, 120), 100 seeds each" % which, test_goal_other_indices.bind(chain_script))
 		await _run("goal (%s): a goal that does not fit waits for the next room, and the plans stay valid" % which, test_goal_waits.bind(chain_script))
 	await _run("contents: locks never move a room, in every step (seeds 1-%d)" % CONTENT_SEEDS, test_locks_keep_rooms)
-	await _run("contents: more lock chance only adds locks, the key spots stay; the goal room moves no roll (seeds 1-%d)" % CONTENT_SEEDS, test_contents_second_stream)
+	await _run("contents: more lock chance only adds locks, the key spots stay; the goal room moves no random number (seeds 1-%d)" % CONTENT_SEEDS, test_contents_second_stream)
 	await _run("contents: room 0, the room before the goal and the goal room are never locked, a lock has a key in the same room (tutorial 04's chain and the finished one)", test_contents_rules)
 	await _run("contents: seed 42 locks rooms %s with the default settings in every step, the lock rate is the chance" % [SEED_42_LOCKS], test_contents_statistics)
 	await _run("solvable: seeds 1-%d, every lock has its key in its own room, the player never gets stuck (finished chain)" % SEED_COUNT, test_solvable_seeds)
@@ -168,7 +168,7 @@ func _initialize() -> void:
 	await _run("props: step 1 fills about half of the spots, with every prop in use", test_step_one_props)
 	for step in _steps_from("step_02_prop_sets"):
 		await _run("%s: the prop sets are Resources: one .tres per room type, scenes and weights match, the long hall favours pillars, the wide room tables and shelves" % step, test_prop_sets.bind(step))
-	await _run("weighted pick: sum, roll, walk: boundaries, zero weights, and 100000 rolls land in proportion", test_weighted_pick)
+	await _run("weighted pick: sum, value, walk: boundaries, zero weights, and 100000 random numbers land in proportion", test_weighted_pick)
 	await _run("props: the weights decide: what a set holds shows in the plans in proportion (seeds 1-%d), and changing the data changes the plans" % PROP_SEEDS, test_prop_distribution)
 	for step in _steps_from("step_03_weighted_rooms"):
 		await _run("%s: the room weights are a Resource: the data decides the order, the same seed gives the same order" % step, test_room_weights.bind(step))
@@ -2233,7 +2233,7 @@ func test_scene_runs(step: String) -> Array[String]:
 
 #region Tutorial 04 (checked again): source rules
 
-## Who knows what: the door never knows what a key is, the key never knows the level, the level never rolls dice.
+## Who knows what: the door never knows what a key is, the key never knows the level, the level never draws random numbers.
 func test_key_rules() -> Array[String]:
 	var failures: Array[String] = []
 	var keys_word := RegEx.create_from_string("\\bkeys?\\b")
@@ -2252,7 +2252,7 @@ func test_key_rules() -> Array[String]:
 		_expect(failures, key_source.contains("model.rotation.y") and key_source.contains("model.position.y"), "%s/key.gd: the model does not spin and bob" % step)
 		for forbidden: String in ["RandomNumberGenerator", "Time."]:
 			_expect(failures, not key_source.contains(forbidden), "%s/key.gd uses %s" % [step, forbidden])
-	# The level, the door and the room never roll dice: only the chain does.
+	# The level, the door and the room never draw random numbers: only the chain does.
 	for step in STEPS:
 		for file: String in ["level.gd", "door.gd", "room.gd", "hud.gd"]:
 			_expect(failures, not FileAccess.get_file_as_string("res://steps/%s/%s" % [step, file]).contains("RandomNumberGenerator"), "%s/%s has a random generator" % [step, file])
@@ -2318,8 +2318,8 @@ func test_locks_keep_rooms() -> Array[String]:
 				return failures
 	return failures
 
-## Raising the chance only adds locks: the dice are rolled for every room, so a room that stays locked keeps its key spot.
-## And a room keeps its roll whatever the goal room does further on.
+## Raising the chance only adds locks: both random numbers are drawn for every room, so a room that stays locked keeps its key spot.
+## And a room keeps its value whatever the goal room does further on.
 func test_contents_second_stream() -> Array[String]:
 	var failures: Array[String] = []
 	for chain_script: GDScript in [Chain00, Chain]:
@@ -2336,7 +2336,7 @@ func test_contents_second_stream() -> Array[String]:
 			var near: Array = _plans_to_goal(chain_script, chain_seed, 12, 0.5).plans
 			var far: Array = _plans_to_goal(chain_script, chain_seed, 20, 0.5).plans
 			for i in 11: # room 11 is the one before the near goal: always open there
-				_expect(failures, near[i].locked == far[i].locked and near[i].key_spot == far[i].key_spot, "seed %d room %d: the goal room changed the roll of another room" % [chain_seed, i])
+				_expect(failures, near[i].locked == far[i].locked and near[i].key_spot == far[i].key_spot, "seed %d room %d: the goal room changed the random number of another room" % [chain_seed, i])
 			if failures.size() > 8:
 				return failures
 	return failures
@@ -3190,7 +3190,7 @@ func test_full_runs_all_spots_filled() -> Array[String]:
 
 #region Tutorial 05: source rules for data
 
-## Props and room weights are data: a Resource script with exports, .tres files, and a chain that only rolls and walks.
+## Props and room weights are data: a Resource script with exports, .tres files, and a chain that only takes a random number and walks.
 func test_data_rules() -> Array[String]:
 	var failures: Array[String] = []
 	for step in _steps_from("step_02_prop_sets"):
@@ -3200,9 +3200,9 @@ func test_data_rules() -> Array[String]:
 			_expect(failures, set_source.contains("@export var %s" % export_name), "%s/prop_set.gd has no export %s" % [step, export_name])
 		var chain_source := FileAccess.get_file_as_string("res://steps/%s/room_chain.gd" % step)
 		_expect(failures, not chain_source.contains("PROP_CHANCE") and not chain_source.contains("PROP_SCENES"), "%s: the chain still has step 1's fixed chance or prop list" % step)
-		_expect(failures, chain_source.contains("static func weighted_pick(weights: Array[float], roll: float) -> int:"), "%s: no weighted_pick(weights, roll)" % step)
+		_expect(failures, chain_source.contains("static func weighted_pick(weights: Array[float], value: float) -> int:"), "%s: no weighted_pick(weights, value)" % step)
 		var pick := _function_body(chain_source, "static func weighted_pick(")
-		_expect(failures, not pick.contains("rand") and not pick.contains("PROP") and not pick.contains("ROOM"), "%s: weighted_pick rolls dice or knows the data: it only sums, compares and walks" % step)
+		_expect(failures, not pick.contains("rand") and not pick.contains("PROP") and not pick.contains("ROOM"), "%s: weighted_pick draws random numbers or knows the data: it only sums, compares and walks" % step)
 		for file in DirAccess.get_files_at("res://steps/%s/props" % step):
 			if file.ends_with(".tres"):
 				var text := FileAccess.get_file_as_string("res://steps/%s/props/%s" % [step, file])
@@ -3479,7 +3479,7 @@ func _room_props_problems(step: String, level: Node3D, index: int) -> Array[Stri
 #region Tutorial 05: the spot rules, exhaustively
 
 ## The rules of check_contents.gd, for every prop at every spot of every room type, and for every pair of spots:
-## whatever the dice give, the rules hold. Every set is widened to all five props for this, so step 1's "any prop
+## whatever the random numbers give, the rules hold. Every set is widened to all five props for this, so step 1's "any prop
 ## anywhere" is covered, too; the sets are put back afterwards.
 func test_prop_spot_rules() -> Array[String]:
 	var failures: Array[String] = []
@@ -3652,7 +3652,7 @@ func test_weighted_pick() -> Array[String]:
 	var failures: Array[String] = []
 	for step in _steps_from("step_02_prop_sets"):
 		var chain_script := _chain_script(step)
-		var pick := func(weights: Array[float], roll: float) -> int: return chain_script.weighted_pick(weights, roll)
+		var pick := func(weights: Array[float], value: float) -> int: return chain_script.weighted_pick(weights, value)
 		var two: Array[float] = [1.0, 3.0]
 		_expect(failures, pick.call(two, 0.0) == 0 and pick.call(two, 0.2499) == 0 and pick.call(two, 0.25) == 1 and pick.call(two, 0.9999999) == 1, "%s: [1, 3] splits at a quarter" % step)
 		var holes: Array[float] = [0.0, 2.0, 0.0, 2.0]

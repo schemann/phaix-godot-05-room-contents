@@ -124,31 +124,31 @@ func _add(type: int, placed: Transform3D) -> Plan:
 	plans.append(plan)
 	return plan
 
-## Locks and keys. The dice come from _content_rng, never from _rng, so the rooms of a seed are the
-## same with or without locks. Both dice are rolled for every room with key spots, locked or not,
-## so a room gets the same roll whatever happens to the rooms around it.
+## Locks and keys. The random numbers come from _content_rng, never from _rng, so the rooms of a seed are the
+## same with or without locks. Both numbers are drawn for every room with key spots, locked or not,
+## so a room gets the same numbers whatever happens to the rooms around it.
 func _decide_contents(plan: Plan) -> void:
 	var spot_count := _modules[plan.type].key_spots.size()
 	if spot_count == 0:
 		return # the goal room has no door and nothing to lock
-	var roll := _content_rng.randf()
+	var value := _content_rng.randf()
 	var spot := _content_rng.randi_range(0, spot_count - 1)
 	# Never locked: room 0, because the run starts with a door that simply opens, and the room before
 	# the goal, so the last stretch is a clean sprint to the pad. (The goal room has no door.)
 	var always_open := plan.index == 0 or plan.index == goal_index - 1
-	if roll < lock_chance and not always_open:
+	if value < lock_chance and not always_open:
 		plan.locked = true
 		plan.key_spot = spot # the key lies in the same room as its lock
 
-## Props. Their own dice, started again for every room from the seed and the room's index, so a room's
+## Props. Their own generator, started again for every room from the seed and the room's index, so a room's
 ## props depend on nothing else: no lock, no goal room, no other room moves them, and they move none of
-## those. Both dice are rolled for every spot, empty or not.
+## those. Both random numbers are drawn for every spot, empty or not.
 func _decide_props(plan: Plan) -> void:
 	_prop_rng.seed = hash([_chain_seed, "props", plan.index])
 	for i in _modules[plan.type].prop_spots.size():
-		var roll := _prop_rng.randf()
+		var value := _prop_rng.randf()
 		var prop := _prop_rng.randi_range(0, PROP_SCENES.size() - 1)
-		plan.props.append(prop if roll < PROP_CHANCE else NO_PROP)
+		plan.props.append(prop if value < PROP_CHANCE else NO_PROP)
 
 func _hits_history(box: AABB) -> bool:
 	var inner := box.grow(-SHRINK)
