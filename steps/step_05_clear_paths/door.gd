@@ -3,6 +3,7 @@ extends Node3D
 ## A locked door only asks: it never knows what a key is, the level answers.
 
 signal opened ## Emitted as the door starts to swing open.
+signal closed ## Emitted when the door has swung shut. Opened again on the way, it never comes.
 signal unlock_requested ## Somebody walked up to a locked door. Whoever listens may answer with unlock().
 
 const OPEN_ANGLE := -PI / 2.0 ## Away from the player, into the next room.
@@ -51,6 +52,7 @@ func _physics_process(_delta: float) -> void:
 		_close_pending = false
 		is_open = false
 		_swing_to(0.0)
+		_tween.tween_callback(closed.emit)
 
 func open() -> void:
 	_close_pending = false

@@ -29,7 +29,7 @@ func _ready() -> void:
 	door.transform = exit.transform
 	add_child(door)
 
-## Room 0 has nothing behind it, so its entrance becomes a plain wall.
+## Room 0 has nothing behind it, and neither has a room whose old rooms are gone: its entrance becomes a plain wall.
 ## A hidden cutter is ignored by the CSG shape, which closes the hole.
 func seal_entrance() -> void:
 	$Shell/WallEntrance/Opening.visible = false

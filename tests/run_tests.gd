@@ -182,6 +182,8 @@ func _initialize() -> void:
 
 	for step in STEPS:
 		await _run("%s: rooms stream in and out through %d rooms, keys fetched on the way" % [step, STREAM_ROOMS], test_streaming.bind(step))
+	for step: String in [STEPS[0], FINAL_STEP]:
+		await _run("%s: a room stays until the door behind it has closed, nothing goes while it stands open" % step, test_rooms_wait_for_the_door.bind(step, true))
 	for step: String in ["step_00_start", FINAL_STEP]:
 		await _run("%s: the plans do not depend on when the player walks" % step, test_timing_independence.bind(step))
 	for step in STEPS:
@@ -992,8 +994,7 @@ class Watcher extends RefCounted:
 	var passed := {} ## Door index -> true once the player crossed its plane.
 	var clear_since := {} ## Door index -> frame when the player was clear of the swing.
 	var verified_closed := {} ## Door index -> true once checked closed and blocking.
-	var checked_current := 0
-	var current_since := 0 ## Frame when the player entered the room the player is in.
+	var shut_since := {} ## Door index -> frame when a door the player has passed was first seen shut.
 	var _last_position := Vector3.ZERO
 
 	func _init(watched_level: Node3D, watched_pilot: RefCounted) -> void:
@@ -1011,7 +1012,7 @@ class Watcher extends RefCounted:
 		var rooms: Dictionary = level.rooms
 		var plans: Array = level.chain.plans ## Plans of the step under test, a class of its own.
 		max_live = maxi(max_live, rooms.size())
-		if rooms.size() > 3:
+		if rooms.size() > 4: # three, and the room two back while the door behind the player has not shut yet
 			fail("%d live rooms" % rooms.size())
 		if plans.size() > int(level.current) + 2:
 			fail("%d plans made while the player is in room %d" % [plans.size(), level.current])
@@ -1058,20 +1059,66 @@ class Watcher extends RefCounted:
 				if level.get_world_3d().direct_space_state.intersect_ray(query).is_empty():
 					fail("door %d is closed but a ray passes it" % index)
 
-		# Rooms behind the previous one are gone: from the dictionary, and, three frames on, from the tree.
-		if level.current != checked_current:
-			checked_current = level.current
-			current_since = frame
+		# A door the player has passed keeps the rooms behind it until it has swung shut. Three frames after that they are gone:
+		# from the dictionary, and from the tree.
 		for index: int in rooms.keys():
-			if index < level.current - 1:
-				fail("room %d still exists while the player is in room %d" % [index, level.current])
-		if frame - current_since == 3:
-			var in_tree := 0
-			for child in level.get_children():
-				if child.get("entrance") != null:
-					in_tree += 1
-			if in_tree != rooms.size():
-				fail("%d room nodes in the tree for %d live rooms" % [in_tree, rooms.size()])
+			if index >= level.current:
+				continue
+			var passed_door: Node3D = rooms[index].door
+			if passed_door.is_open or absf(passed_door.hinge.rotation.y) > 0.001:
+				shut_since.erase(index)
+				continue
+			if not shut_since.has(index):
+				shut_since[index] = frame
+			var shut_for: int = frame - int(shut_since[index])
+			for old: int in rooms.keys():
+				if old < index and shut_for >= 3:
+					fail("room %d still exists %d frames after door %d has shut" % [old, shut_for, index])
+			if shut_for == 3:
+				var in_tree := 0
+				for child in level.get_children():
+					if child.get("entrance") != null:
+						in_tree += 1
+				if in_tree != rooms.size():
+					fail("%d room nodes in the tree for %d live rooms" % [in_tree, rooms.size()])
+
+## Room 2 entered: the door of room 1 starts to close behind the player, room 0 is the oldest room.
+func _door_closing_behind_room_2(step: String) -> Node:
+	var main := await _load_step(step)
+	var level: Node3D = main.get_node("Level")
+	level.rooms[0].door.open() # builds room 1
+	level._on_room_entered(level.player, 1)
+	await _wait_physics(45)
+	level.rooms[1].door.open() # builds room 2
+	await _wait_physics(45)
+	level._on_room_entered(level.player, 2)
+	return main
+
+## Through the door behind the player the picture goes along the room just left, to the doorway of the one before it: that room
+## stays until the door has shut. `with_restart`: the step has R, which builds a new room 0 while the door of the old run still swings.
+func test_rooms_wait_for_the_door(step: String, with_restart: bool) -> Array[String]:
+	var failures: Array[String] = []
+	var main := await _door_closing_behind_room_2(step)
+	var level: Node3D = main.get_node("Level")
+	_expect(failures, level.has_method("_on_door_closed"), "the level has no _on_door_closed: nothing frees the old rooms when a door has shut")
+	_expect(failures, level.rooms.has(0), "room 0 went while the door behind the player stood open")
+	await _wait_physics(45)
+	_expect(failures, not level.rooms.has(0), "room 0 is still there behind the shut door")
+	_expect(failures, level.rooms.has(1), "the room just left went with room 0")
+	_expect(failures, not level.rooms[1].get_node("Shell/WallEntrance/Opening").visible, "the room just left has no wall at its entrance")
+	await _unload(main)
+	main = await _door_closing_behind_room_2(step)
+	level = main.get_node("Level")
+	await _wait_physics(10)
+	level.rooms[1].door.open() # the player turned around while the leaf still swings
+	await _wait_physics(45)
+	_expect(failures, level.rooms.has(0), "room 0 went while the door stood open again")
+	if with_restart and level.has_method("_on_door_closed"):
+		level.start()
+		level._on_door_closed(2) # a restart is faster than the door of the old run
+		_expect(failures, level.rooms.has(0), "the door of the old run took room 0 of the new one")
+	await _unload(main)
+	return failures
 
 func test_streaming(step: String) -> Array[String]:
 	var main := await _load_step(step)
@@ -1093,12 +1140,12 @@ func test_streaming(step: String) -> Array[String]:
 	pilot.release()
 	_fast_forward(false)
 
-	_expect(watcher.failures, watcher.max_live == 3, "at most %d rooms were live at once, expected 3" % watcher.max_live)
+	_expect(watcher.failures, watcher.max_live >= 3 and watcher.max_live <= 4, "at most %d rooms were live at once, expected 3 or 4" % watcher.max_live)
 	_expect(watcher.failures, watcher.max_step < 0.2, "the player moved %.2f m in one physics frame" % watcher.max_step)
 	_expect(watcher.failures, watcher.passed.size() >= STREAM_ROOMS - 1, "the player passed only %d doors" % watcher.passed.size())
 	_expect(watcher.failures, watcher.verified_closed.size() >= STREAM_ROOMS - 2, "only %d doors were seen closing behind the player" % watcher.verified_closed.size())
 	var live: Array[Node3D] = _rooms_of(level)
-	_expect(watcher.failures, live.size() == level.rooms.size() and live.size() <= 3, "%d room nodes in the tree for %d live rooms" % [live.size(), level.rooms.size()])
+	_expect(watcher.failures, live.size() == level.rooms.size() and live.size() <= 4, "%d room nodes in the tree for %d live rooms" % [live.size(), level.rooms.size()])
 	for i in range(live.size() - 1):
 		var exit_point: Transform3D = (live[i].get("exit") as Marker3D).global_transform
 		var entrance: Transform3D = (live[i + 1].get("entrance") as Marker3D).global_transform
@@ -1293,7 +1340,6 @@ func test_goal_in_level(step: String) -> Array[String]:
 	var room: Node3D = level.rooms[SHORT_GOAL]
 	_expect(failures, room.scene_file_path.ends_with("room_goal.tscn"), "room %d is %s" % [SHORT_GOAL, room.scene_file_path])
 	_expect(failures, room.get("door") == null and room.get("exit") == null, "the goal room has a door or an exit")
-	_expect(failures, level.rooms.size() == 2 and level.rooms.has(SHORT_GOAL - 1), "%d rooms live in the goal room" % level.rooms.size())
 	_expect(failures, level.get("goal_room") == SHORT_GOAL and level.chain.goal_index == SHORT_GOAL, "goal_room %s, goal_index %d" % [level.get("goal_room"), level.chain.goal_index])
 	_expect(failures, room.get("goal_pad") != null and room.get("goal_pad") == room.get_node("GoalPad"), "the room does not point at its goal pad")
 
@@ -1309,6 +1355,8 @@ func test_goal_in_level(step: String) -> Array[String]:
 	pilot.release()
 	await _wait_physics(10)
 	_fast_forward(false)
+	# The door behind the player has shut by the time the player stands on the pad: the room before the last one is gone.
+	_expect(failures, level.rooms.size() == 2 and level.rooms.has(SHORT_GOAL - 1), "%d rooms live on the goal pad" % level.rooms.size())
 	var on_pad := Vector2(player.global_position.x - pad.global_position.x, player.global_position.z - pad.global_position.z).abs()
 	_expect(failures, on_pad.x < 1.5 and on_pad.y < 1.5, "the player is %s from the middle of the pad" % on_pad)
 	_expect(failures, absf(player.global_position.y - 0.12) < 0.02, "the player stands at y = %.3f, the pad top is 0.12" % player.global_position.y)
