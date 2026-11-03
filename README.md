@@ -44,6 +44,10 @@ godot --headless --path . -s res://tests/run_tests.gd
 - `tests/run_tests.gd` has a new test, `test_rooms_wait_for_the_door`, and the streaming test expects the rooms to go when the door has shut.
 - The rest is as in the video.
 
+## Support
+
+Support the channel: https://ko-fi.com/phaix or https://github.com/sponsors/schemann
+
 ## License
 
 Code and scenes: MIT (see LICENSE).
